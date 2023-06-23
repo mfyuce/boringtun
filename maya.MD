@@ -1,12 +1,11 @@
 
-./create_namespace.sh
+
+sudo ./create_namespace.sh
 sudo ip netns exec right bash
-sudo WG_QUICK_USERSPACE_IMPLEMENTATION=boringtun-cli WG_SUDO=1 wg-quick up  ./wg1.conf
+sudo WG_QUICK_USERSPACE_IMPLEMENTATION=./target/release/boringtun-cli WG_SUDO=1 wg-quick up  ./wg1.conf
 
 sudo ip netns exec left bash
-sudo WG_QUICK_USERSPACE_IMPLEMENTATION=boringtun-cli WG_SUDO=1 wg-quick up  ./wg0.conf
-
-
+sudo WG_QUICK_USERSPACE_IMPLEMENTATION=./target/release/boringtun-cli WG_SUDO=1 wg-quick up  ./wg0.conf
 
 sudo ip netns exec left ip route add default dev wg0
 sudo ip netns exec right ip route add default dev wg1
