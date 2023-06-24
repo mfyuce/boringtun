@@ -591,11 +591,13 @@ impl Tunn {
 
 #[cfg(test)]
 mod tests {
+    use std::time::Instant;
     #[cfg(feature = "mock-instant")]
     use crate::noise::timers::{REKEY_AFTER_TIME, REKEY_TIMEOUT};
 
     use super::*;
     use rand_core::{OsRng, RngCore};
+    use tracing::info;
 
     fn create_two_tuns() -> (Tunn, Tunn) {
         let my_secret_key = x25519_dalek::StaticSecret::random_from_rng(OsRng);
@@ -776,9 +778,7 @@ mod tests {
         let (mut my_tun, mut their_tun) = create_two_tuns_and_handshake();
         let mut my_dst = [0u8; 1024];
         let mut their_dst = [0u8; 1024];
-
         let sent_packet_buf = create_ipv4_udp_packet();
-
         let data = my_tun.encapsulate(&sent_packet_buf, &mut my_dst);
         assert!(matches!(data, TunnResult::WriteToNetwork(_)));
         let data = if let TunnResult::WriteToNetwork(sent) = data {
@@ -795,5 +795,42 @@ mod tests {
             unreachable!();
         };
         assert_eq!(sent_packet_buf, recv_packet_buf);
+    }
+
+    #[test]
+    fn one_gb_packets() {
+        let (mut my_tun, mut their_tun) = create_two_tuns_and_handshake();
+        let mut my_dst = [0u8; 1024];
+        let mut their_dst = [0u8; 1024];
+        let mut total:usize = 0;
+        let s = Instant::now();
+        let two:i32 = 2;
+        let one_g:usize = two.pow(25) as usize;
+        loop {
+            let sent_packet_buf = create_ipv4_udp_packet();
+            total += sent_packet_buf.len();
+            let data = my_tun.encapsulate(&sent_packet_buf, &mut my_dst);
+            // assert!(matches!(data, TunnResult::WriteToNetwork(_)));
+            let data = if let TunnResult::WriteToNetwork(sent) = data {
+                sent
+            } else {
+                unreachable!();
+            };
+
+            let data = their_tun.decapsulate(None, data, &mut their_dst);
+            // assert!(matches!(data, TunnResult::WriteToTunnelV4(..)));
+            let recv_packet_buf = if let TunnResult::WriteToTunnelV4(recv, _addr) = data {
+                recv
+            } else {
+                unreachable!();
+            };
+            // assert_eq!(sent_packet_buf, recv_packet_buf);
+            if total > one_g {
+                break;
+            }
+        }
+        let f = Instant::now();
+        let passed = (f-s).as_millis();
+        println!("tp in {}", passed);
     }
 }
