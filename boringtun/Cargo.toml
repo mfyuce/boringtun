@@ -62,3 +62,5 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [[bench]]
 name = "crypto_benches"
 harness = false
+debug = false # when possible
+opt-level = 3
