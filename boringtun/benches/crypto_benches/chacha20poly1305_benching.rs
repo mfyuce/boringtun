@@ -1,13 +1,14 @@
 use aead::{AeadInPlace, KeyInit};
 use criterion::{BenchmarkId, Criterion, Throughput};
 use rand_core::{OsRng, RngCore};
-use ring::aead::{Aad, LessSafeKey, Nonce, UnboundKey, CHACHA20_POLY1305};
+use ring::aead::{Aad, LessSafeKey, Nonce, UnboundKey, CHACHA20_POLY1305,AES_256_GCM};
 
 fn chacha20poly1305_ring(key_bytes: &[u8], buf: &mut [u8]) {
     let len = buf.len();
     let n = len - 16;
 
-    let key = LessSafeKey::new(UnboundKey::new(&CHACHA20_POLY1305, key_bytes).unwrap());
+    // let key = LessSafeKey::new(UnboundKey::new(&CHACHA20_POLY1305, key_bytes).unwrap());
+    let key = LessSafeKey::new(UnboundKey::new(&AES_256_GCM, key_bytes).unwrap());
 
     let tag = key
         .seal_in_place_separate_tag(

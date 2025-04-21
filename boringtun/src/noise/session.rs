@@ -4,7 +4,7 @@
 use super::PacketData;
 use crate::noise::errors::WireGuardError;
 use parking_lot::Mutex;
-use ring::aead::{Aad, LessSafeKey, Nonce, UnboundKey, CHACHA20_POLY1305};
+use ring::aead::{Aad, LessSafeKey, Nonce, UnboundKey, CHACHA20_POLY1305,AES_256_GCM};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 pub struct Session {
@@ -157,10 +157,14 @@ impl Session {
         Session {
             receiving_index: local_index,
             sending_index: peer_index,
+            // receiver: LessSafeKey::new(
+            //     UnboundKey::new(&CHACHA20_POLY1305, &receiving_key).unwrap(),
+            // ),
             receiver: LessSafeKey::new(
-                UnboundKey::new(&CHACHA20_POLY1305, &receiving_key).unwrap(),
+                UnboundKey::new(&AES_256_GCM, &receiving_key).unwrap(),
             ),
-            sender: LessSafeKey::new(UnboundKey::new(&CHACHA20_POLY1305, &sending_key).unwrap()),
+            // sender: LessSafeKey::new(UnboundKey::new(&CHACHA20_POLY1305, &sending_key).unwrap()),
+            sender: LessSafeKey::new(UnboundKey::new(&AES_256_GCM, &sending_key).unwrap()),
             sending_key_counter: AtomicUsize::new(0),
             receiving_key_counter: Mutex::new(Default::default()),
         }

@@ -9,7 +9,7 @@ use blake2::digest::{FixedOutput, KeyInit};
 use blake2::{Blake2s256, Blake2sMac, Digest};
 use chacha20poly1305::XChaCha20Poly1305;
 use rand_core::OsRng;
-use ring::aead::{Aad, LessSafeKey, Nonce, UnboundKey, CHACHA20_POLY1305};
+use ring::aead::{Aad, LessSafeKey, Nonce, UnboundKey, CHACHA20_POLY1305,AES_256_GCM};
 use std::convert::TryInto;
 use std::time::{Duration, Instant, SystemTime};
 
@@ -97,7 +97,8 @@ fn aead_chacha20_seal_inner(
     data: &[u8],
     aad: &[u8],
 ) {
-    let key = LessSafeKey::new(UnboundKey::new(&CHACHA20_POLY1305, key).unwrap());
+    // let key = LessSafeKey::new(UnboundKey::new(&CHACHA20_POLY1305, key).unwrap());
+    let key = LessSafeKey::new(UnboundKey::new(&AES_256_GCM, key).unwrap());
 
     ciphertext[..data.len()].copy_from_slice(data);
 
@@ -137,7 +138,8 @@ fn aead_chacha20_open_inner<'in_out>(
     data: &[u8],
     aad: &[u8],
 ) -> Result<(), ring::error::Unspecified> {
-    let key = LessSafeKey::new(UnboundKey::new(&CHACHA20_POLY1305, key).unwrap());
+    // let key = LessSafeKey::new(UnboundKey::new(&CHACHA20_POLY1305, key).unwrap());
+    let key = LessSafeKey::new(UnboundKey::new(&AES_256_GCM, key).unwrap());
 
     let mut inner_buffer = data.to_owned();
 
